@@ -4,7 +4,7 @@ const cors = require('cors')
 const helmet = require('helmet')
 const { NODE_ENV, CLIENT_ORIGIN } = require('./config')
 const winston = require('winston');
-const tasksRouter = require('./recipes/recipes-router')
+const recipesRouter = require('./recipes/recipes-router')
 const logger = require('./logger')
 const express = require('express');
 
