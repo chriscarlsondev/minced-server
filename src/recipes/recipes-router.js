@@ -31,9 +31,9 @@ const recipesRouter = express.Router()
 const serializeRecipe = recipe => ({
   id: recipe.id,
   title: xss(recipe.title),
-  servings: recipe.servings,
-  preptime: recipe.preptime,
-  cooktime: recipe.cooktime,
+  servings: xss(recipe.servings),
+  preptime: xss(recipe.preptime),
+  cooktime: xss(recipe.cooktime),
   ingredients: xss(recipe.ingredients),
   instructions: xss(recipe.instructions),
   notes: xss(recipe.notes)
