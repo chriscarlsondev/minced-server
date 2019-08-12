@@ -1,12 +1,43 @@
+require('dotenv').config()
 const express = require('express')
-const bodyParser = express.json()
+const morgan = require('morgan')
+const cors = require('cors')
+const helmet = require('helmet')
+const { NODE_ENV } = require('../config')
 const logger = require('../logger')
 const RecipesService = require('./recipes-service')
 const xss = require('xss')
+const jsonParser = express.json()
 const path = require('path')
+
+
+const app = express()
+
+const morganOption = (NODE_ENV === 'production')
+  ? 'tiny'
+  : 'common';
+
+app.use(morgan(morganOption, {
+  skip: () => NODE_ENV === 'test',
+}))
+app.use(cors())
+app.use(helmet())
+
+app.use(express.static('public'))
+
 
 const recipesRouter = express.Router()
 
+const serializeRecipe = recipe => ({
+  id: recipe.id,
+  title: xss(recipe.title),
+  servings: recipe.servings,
+  preptime: recipe.preptime,
+  cooktime: recipe.cooktime,
+  ingredients: xss(recipe.ingredients),
+  instructions: xss(recipe.instructions),
+  notes: xss(recipe.notes)
+})
 
 recipesRouter
   .route('/')
@@ -18,7 +49,7 @@ recipesRouter
     })
     .catch(next)
   })
-  .post(bodyParser, (req, res, next) => {
+  .post(jsonParser, (req, res, next) => {
     // Write a route handler for POST /tasks that accepts a JSON object representing a task and adds it to the list of tasks after validation.
     const { title, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
     const newRecipe = { title, servings, preptime, cooktime, ingredients, instructions, notes }
@@ -29,8 +60,6 @@ recipesRouter
         error: { message: `Invalid recipe title submitted` }
       })
     }
-
-
     RecipesService.insertRecipe(
         req.app.get('db'),
         newRecipe
@@ -42,6 +71,50 @@ recipesRouter
                 .json(recipe)
         })
         .catch(next)
+  })
+
+recipesRouter
+  .route('/:recipe_id')
+  .all((req, res, next) => {
+    if(isNaN(parseInt(req.params.recipe_id))) {
+      return res.status(404).json({
+        error: { message: `Invalid id` }
+      })
+    }
+    RecipesService.getRecipeById(
+      req.app.get('db'),
+      req.params.recipe_id
+    )
+      .then(recipe => {
+        if (!recipe) {
+          return res.status(404).json({
+            error: { message: `Recipe doesn't exist` }
+          })
+        }
+        res.recipe = recipe
+        next()
+      })
+      .catch(next)
+  })
+  .get((req, res, next) => {
+    res.json(serializeRecipe(res.recipe))
+  })
+  .patch(jsonParser, (req, res, next) => {
+    const { title, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
+    const updatedRecipe = { title, servings, preptime, cooktime, ingredients, instructions, notes }
+
+    RecipesService.updateRecipe(req.app.get('db'), req.params.recipe_id, updatedRecipe)
+      .then(result => {
+        res.status(200).json(serializeRecipe(result[0]));
+    }).catch(next)
+
+
+  })
+  .delete((req, res, next) => {
+    RecipesService.deleteRecipe(req.app.get('db'), req.params.recipe_id)
+      .then(
+        res.status(204).end()
+    ).catch(next)
   })
 
 module.exports = recipesRouter

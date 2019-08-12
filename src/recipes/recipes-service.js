@@ -23,7 +23,7 @@ const RecipesService = {
           .where({'id': recipe_id})
           .delete()
       },
-      updateTodo(db, recipe_id, newRecipe) {
+    updateRecipe(db, recipe_id, newRecipe) {
         return db('recipes')
           .where({id: recipe_id})
           .update(newRecipe, returning=true)
