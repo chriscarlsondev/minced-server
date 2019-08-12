@@ -31,6 +31,7 @@ const recipesRouter = express.Router()
 const serializeRecipe = recipe => ({
   id: recipe.id,
   title: xss(recipe.title),
+  description: xss(recipe.description),
   servings: xss(recipe.servings),
   preptime: xss(recipe.preptime),
   cooktime: xss(recipe.cooktime),
@@ -51,8 +52,8 @@ recipesRouter
   })
   .post(jsonParser, (req, res, next) => {
     // Write a route handler for POST /tasks that accepts a JSON object representing a task and adds it to the list of tasks after validation.
-    const { title, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
-    const newRecipe = { title, servings, preptime, cooktime, ingredients, instructions, notes }
+    const { title, description, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
+    const newRecipe = { title, description, servings, preptime, cooktime, ingredients, instructions, notes }
 
     if (newRecipe.title.length === 0) {
       logger.error(`Recipe title must be greater than zero`);
@@ -100,8 +101,8 @@ recipesRouter
     res.json(serializeRecipe(res.recipe))
   })
   .patch(jsonParser, (req, res, next) => {
-    const { title, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
-    const updatedRecipe = { title, servings, preptime, cooktime, ingredients, instructions, notes }
+    const { title, description, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
+    const updatedRecipe = { title, description, servings, preptime, cooktime, ingredients, instructions, notes }
 
     RecipesService.updateRecipe(req.app.get('db'), req.params.recipe_id, updatedRecipe)
       .then(result => {
