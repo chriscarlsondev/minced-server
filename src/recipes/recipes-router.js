@@ -55,10 +55,31 @@ recipesRouter
     const { title, rec_description, servings, preptime, cooktime, ingredients, instructions, notes } = req.body
     const newRecipe = { title, rec_description, servings, preptime, cooktime, ingredients, instructions, notes }
 
+    if (newRecipe.servings === "") {
+      newRecipe.servings = null;
+    }
+    if (newRecipe.preptime === "") {
+      newRecipe.preptime = null;
+    }
+    if (newRecipe.cooktime === "") {
+      newRecipe.cooktime = null;
+    }
     if (newRecipe.title.length === 0) {
       logger.error(`Recipe title must be greater than zero`);
       return res.status(400).json({
         error: { message: `Invalid recipe title submitted` }
+      })
+    }
+    if (newRecipe.ingredients.length === 0) {
+      logger.error(`Recipe must include ingredients`);
+      return res.status(400).json({
+        error: { message: `Invalid recipe ingredients submitted` }
+      })
+    }
+    if (newRecipe.instructions.length === 0) {
+      logger.error(`Recipe must include instructions`);
+      return res.status(400).json({
+        error: { message: `Invalid recipe instructions submitted` }
       })
     }
     RecipesService.insertRecipe(
